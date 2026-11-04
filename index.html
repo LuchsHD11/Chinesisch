@@ -492,30 +492,14 @@ function distractors(c){
   for (const o of cand){ if (out.every(x => kurz(x) !== kurz(o) && x.h !== o.h)) out.push(o); if (out.length === 3) break; }
   return out;
 }
-/* Pinyin-Distraktoren: Ton-Varianten des richtigen Wortes plus Pinyin anderer Wörter */
-const TONES = {a:"āáǎà",e:"ēéěè",i:"īíǐì",o:"ōóǒò",u:"ūúǔù","ü":"ǖǘǚǜ",A:"ĀÁǍÀ",E:"ĒÉĚÈ",O:"ŌÓǑÒ"};
-const BASE = {}; for (const b in TONES) [...TONES[b]].forEach((ch, i) => BASE[ch] = [b, i]);
-const plain = s => s.normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/ü/g, "u").toLowerCase();
-function retone(p){
-  const chars = [...p], marked = chars.map((c, i) => BASE[c] ? i : -1).filter(i => i >= 0);
-  if (marked.length){
-    const i = marked[Math.random() * marked.length | 0], [b, tn] = BASE[chars[i]];
-    const opts = [0,1,2,3,4].filter(x => x !== tn + 1), n = opts[Math.random() * opts.length | 0];
-    chars[i] = n ? TONES[b][n - 1] : b;
-  } else {
-    let i = chars.findIndex(c => "aeoAEO".includes(c));
-    if (i < 0) for (let k = chars.length - 1; k >= 0; k--) if ("iuü".includes(chars[k])){ i = k; break; }
-    if (i < 0) return null;
-    chars[i] = TONES[chars[i]][Math.random() * 4 | 0];
-  }
-  return chars.join("");
-}
+/* Pinyin-Distraktoren: Pinyin anderer Wörter aus der Auswahl, möglichst gleich lang */
+const plain = s => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/ü/g, "u").toLowerCase();
 function pinyinOptions(c){
-  const out = [c.p], seen = new Set([c.p]);
-  for (let k = 0; k < 30 && out.length < 3; k++){ const v = retone(c.p); if (v && !seen.has(v)){ seen.add(v); out.push(v); } }
-  const others = shuffle(CARDS.filter(o => o.id !== c.id && plain(o.p) !== plain(c.p)))
-    .sort((a, b) => Math.abs([...a.h].length - [...c.h].length) - Math.abs([...b.h].length - [...c.h].length));
-  for (const o of others){ if (out.length >= 4) break; if (!seen.has(o.p)){ seen.add(o.p); out.push(o.p); } }
+  const len = [...c.h].length, out = [c.p], seen = new Set([plain(c.p)]);
+  let pool = selected().filter(o => o.id !== c.id && !seen.has(plain(o.p)));
+  if (pool.length < 3) pool = CARDS.filter(o => o.id !== c.id);
+  const cand = shuffle(pool.slice()).sort((x, y) => Math.abs([...x.h].length - len) - Math.abs([...y.h].length - len));
+  for (const o of cand){ if (out.length >= 4) break; const k = plain(o.p); if (!seen.has(k)){ seen.add(k); out.push(o.p); } }
   return shuffle(out);
 }
 let qPick = {p:null, m:null};
