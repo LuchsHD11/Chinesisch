@@ -1,0 +1,24 @@
+{
+ "name": "字卡 Vokabelkarten",
+ "short_name": "字卡",
+ "lang": "de",
+ "start_url": "./",
+ "scope": "./",
+ "display": "standalone",
+ "background_color": "#EEF2EF",
+ "theme_color": "#2D7A66",
+ "icons": [
+  {
+   "src": "icon-192.png",
+   "sizes": "192x192",
+   "type": "image/png",
+   "purpose": "any maskable"
+  },
+  {
+   "src": "icon-512.png",
+   "sizes": "512x512",
+   "type": "image/png",
+   "purpose": "any maskable"
+  }
+ ]
+}
