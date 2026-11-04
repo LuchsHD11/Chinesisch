@@ -128,6 +128,25 @@ button:focus-visible{outline:2px solid var(--jade);outline-offset:2px}
 #sv .num text{fill:var(--card);font:600 54px var(--sans);text-anchor:middle;dominant-baseline:central}
 .word{font:500 22px var(--hanzi)}
 .word mark{background:none;color:var(--jade)}
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line)}
+.tabs button{background:none;border:0;border-bottom:2px solid transparent;padding:10px 4px;margin-right:16px;font-weight:600;color:var(--muted)}
+.tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--jade)}
+.unknown{grid-column:1/-1;background:none;border:1px dashed var(--line)!important;color:var(--muted);font-weight:400!important;font-size:15px!important;padding:10px!important}
+.olabel{font:600 12px var(--sans);text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:4px 0 -4px}
+.opt.pin{font:600 18px var(--sans);text-align:center}
+.opt.picked{border-color:var(--ink)}
+.search{width:100%;box-sizing:border-box;font:inherit;font-size:17px;padding:12px 14px;border-radius:12px;border:1px solid var(--line);background:var(--card);color:var(--ink)}
+.search:focus{outline:2px solid var(--jade);outline-offset:1px}
+.vlist{display:flex;flex-direction:column;gap:18px}
+.vgroup{display:flex;flex-direction:column;gap:0}
+.vgroup h3{font:600 13px var(--sans);text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:0 0 6px}
+.vrow{display:grid;grid-template-columns:minmax(64px,auto) 1fr auto;gap:4px 14px;align-items:baseline;padding:10px 2px;border-top:1px solid var(--line)}
+.vrow .h{font:500 24px/1.2 var(--hanzi);grid-row:span 2}
+.vrow .p{font-weight:600;color:var(--jade);min-width:0}
+.vrow .e{grid-column:2/4;font-size:14px;color:var(--muted);min-width:0;overflow-wrap:anywhere}
+.vrow .b{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+.vrow .v{font-size:13px;color:var(--muted);margin-left:4px}
+mark.hl{background:var(--jade-soft);color:inherit;border-radius:3px}
 .xfer{display:flex;flex-direction:column;gap:8px}
 .xfer summary{cursor:pointer;color:var(--jade);font-weight:600}
 .xfer[open]{display:flex}
@@ -139,8 +158,12 @@ button:focus-visible{outline:2px solid var(--jade);outline-offset:2px}
 </head>
 <body>
 <main>
+  <h1 id="head">字卡 <small>Vokabelkarten · Lektion 1–8</small></h1>
+  <nav class="tabs" id="tabs" role="tablist">
+    <button role="tab" data-tab="setup" aria-selected="true">Üben</button>
+    <button role="tab" data-tab="list" aria-selected="false">Vokabelliste</button>
+  </nav>
   <section id="setup" class="sec" style="gap:22px">
-    <h1>字卡 <small>Vokabelkarten · Lektion 1–8</small></h1>
 
     <div class="sec"><h2>Modus</h2>
       <div class="seg" id="mode">
@@ -180,6 +203,12 @@ button:focus-visible{outline:2px solid var(--jade);outline-offset:2px}
     </div>
   </section>
 
+  <section id="list" class="sec" hidden>
+    <input class="search" id="q" type="search" placeholder="Suchen: Deutsch, Pinyin oder 字" autocomplete="off" aria-label="Vokabeln durchsuchen">
+    <p class="note" id="qCount"></p>
+    <div class="vlist" id="vlist"></div>
+  </section>
+
   <div class="top" id="topbar" hidden><button class="link" id="back" aria-label="Zur Auswahl">← Auswahl</button>
     <div class="bar"><i id="prog" style="width:0"></i></div><span class="count" id="count"></span></div>
 
@@ -191,6 +220,7 @@ button:focus-visible{outline:2px solid var(--jade);outline-offset:2px}
     <div class="rate" id="rate" hidden>
       <button class="again" id="bAgain">Nochmal<span class="keys">1</span></button>
       <button class="good" id="bGood">Gewusst<span class="keys">2</span></button>
+      <button class="unknown" id="bNew">Unbekannt, kam noch nicht dran<span class="keys">3</span></button>
     </div>
     <div class="strokes" id="strokes" hidden>
       <div class="chars" id="chars"></div>
@@ -202,8 +232,12 @@ button:focus-visible{outline:2px solid var(--jade);outline-offset:2px}
 
   <section id="quiz" class="sec" hidden>
     <div class="qcard"><span class="tag" id="qTag"></span><span class="boxtag" id="qBox"></span><div id="qPrompt"></div><div id="qReveal"></div></div>
+    <p class="olabel">Pinyin</p>
+    <div class="opts" id="optsP"></div>
+    <p class="olabel" id="optLabel">Bedeutung</p>
     <div class="opts" id="opts"></div>
     <button class="primary" id="qNext" hidden>Weiter</button>
+    <button class="link" id="qNew">Unbekannt, kam noch nicht dran</button>
   </section>
 
   <section id="stroke" class="sec" hidden>
@@ -349,15 +383,17 @@ $("yes").onclick = () => { st.boxes = {}; st.sbox = {}; save(); $("no").onclick(
 
 /* --- Endlos-Übung (gemeinsam für alle Modi) --- */
 const WEIGHT = [0, 16, 8, 4, 2, 1];
-let pool = [], roundMode = "cards", cur = null, tick = 0, recent = [], retry = [], right = 0, wrong = 0, missed = new Set();
+let skipped = 0, pool = [], roundMode = "cards", cur = null, tick = 0, recent = [], retry = [], right = 0, wrong = 0, missed = new Set();
 function show(id){
-  ["setup","study","quiz","stroke","done"].forEach(s => $(s).hidden = s !== id);
+  ["setup","list","study","quiz","stroke","done"].forEach(s => $(s).hidden = s !== id);
   $("topbar").hidden = !["study","quiz","stroke"].includes(id);
+  $("tabs").hidden = $("head").hidden = !["setup","list"].includes(id);
+  $("tabs").querySelectorAll("button").forEach(b => b.setAttribute("aria-selected", b.dataset.tab === id));
   window.scrollTo(0,0);
 }
 function startPractice(items, fresh){
   roundMode = st.mode; pool = items; recent = []; retry = [];
-  if (fresh){ right = 0; wrong = 0; missed = new Set(); }
+  if (fresh){ right = 0; wrong = 0; skipped = 0; missed = new Set(); }
   next();
 }
 $("start").onclick = () => startPractice(isStroke() ? strokeItems(selected()) : selected(), true);
@@ -376,12 +412,18 @@ function rate(ok){
   if (ok){ right++; setBox(it, Math.min(5, boxOf(it) + 1)); }
   else {
     wrong++; missed.add(it.id); setBox(it, 1);
-    if (!retry.some(r => r.it.id === it.id) && pool.length > 1) retry.push({it, due: tick + Math.min(4, pool.length)});
+    if (!retry.some(r => r.it.id === it.id) && pool.length > 1) retry.push({it, due: tick + Math.min(8 + (Math.random() * 5 | 0), pool.length - 1)});
   }
   save(); next();
 }
+/* "Unbekannt": raus aus dieser Sitzung, beim nächsten Start wieder dabei */
+function skipNew(){
+  const it = cur;
+  pool = pool.filter(i => i.id !== it.id); retry = retry.filter(r => r.it.id !== it.id); skipped++;
+  next();
+}
 function next(){
-  if (!pool.length) return home();
+  if (!pool.length) return pause();
   cur = pick(); recent.push(cur.id); if (recent.length > 20) recent.shift();
   const safe = pool.filter(i => boxOf(i) >= 4).length;
   $("count").textContent = `${right} ✓ · ${wrong} ✗`;
@@ -390,7 +432,8 @@ function next(){
   ({cards:showCard, quiz:showQuiz, stroke:showStroke})[roundMode]();
 }
 function pause(){
-  if (!right && !wrong) return home();
+  if (!right && !wrong && !skipped) return home();
+  $("resume").hidden = !pool.length;
   $("sFirst").textContent = right; $("sMiss").textContent = wrong;
   $("redo").hidden = !missed.size;
   show("done");
@@ -428,11 +471,13 @@ function flip(){
 $("card").onclick = flip;
 $("bAgain").onclick = () => flipped && rate(false);
 $("bGood").onclick = () => flipped && rate(true);
+$("bNew").onclick = () => flipped && skipNew();
 document.addEventListener("keydown", e => {
   if ($("study").hidden) return;
   if ((e.key === " " || e.key === "Enter") && !flipped){ e.preventDefault(); flip(); }
   else if (e.key === "1" && flipped) rate(false);
   else if (e.key === "2" && flipped) rate(true);
+  else if (e.key === "3" && flipped) skipNew();
 });
 
 /* --- Quiz --- */
@@ -447,43 +492,110 @@ function distractors(c){
   for (const o of cand){ if (out.every(x => kurz(x) !== kurz(o) && x.h !== o.h)) out.push(o); if (out.length === 3) break; }
   return out;
 }
+/* Pinyin-Distraktoren: Ton-Varianten des richtigen Wortes plus Pinyin anderer Wörter */
+const TONES = {a:"āáǎà",e:"ēéěè",i:"īíǐì",o:"ōóǒò",u:"ūúǔù","ü":"ǖǘǚǜ",A:"ĀÁǍÀ",E:"ĒÉĚÈ",O:"ŌÓǑÒ"};
+const BASE = {}; for (const b in TONES) [...TONES[b]].forEach((ch, i) => BASE[ch] = [b, i]);
+const plain = s => s.normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/ü/g, "u").toLowerCase();
+function retone(p){
+  const chars = [...p], marked = chars.map((c, i) => BASE[c] ? i : -1).filter(i => i >= 0);
+  if (marked.length){
+    const i = marked[Math.random() * marked.length | 0], [b, tn] = BASE[chars[i]];
+    const opts = [0,1,2,3,4].filter(x => x !== tn + 1), n = opts[Math.random() * opts.length | 0];
+    chars[i] = n ? TONES[b][n - 1] : b;
+  } else {
+    let i = chars.findIndex(c => "aeoAEO".includes(c));
+    if (i < 0) for (let k = chars.length - 1; k >= 0; k--) if ("iuü".includes(chars[k])){ i = k; break; }
+    if (i < 0) return null;
+    chars[i] = TONES[chars[i]][Math.random() * 4 | 0];
+  }
+  return chars.join("");
+}
+function pinyinOptions(c){
+  const out = [c.p], seen = new Set([c.p]);
+  for (let k = 0; k < 30 && out.length < 3; k++){ const v = retone(c.p); if (v && !seen.has(v)){ seen.add(v); out.push(v); } }
+  const others = shuffle(CARDS.filter(o => o.id !== c.id && plain(o.p) !== plain(c.p)))
+    .sort((a, b) => Math.abs([...a.h].length - [...c.h].length) - Math.abs([...b.h].length - [...c.h].length));
+  for (const o of others){ if (out.length >= 4) break; if (!seen.has(o.p)){ seen.add(o.p); out.push(o.p); } }
+  return shuffle(out);
+}
+let qPick = {p:null, m:null};
 function showQuiz(){
   show("quiz");
-  const c = cur, zh = st.dir === "zh"; qResult = null;
+  const c = cur, zh = st.dir === "zh"; qResult = null; qPick = {p:null, m:null};
   $("qTag").textContent = `L${c.l} · ${c.nr}`; $("qBox").textContent = `Box ${boxOf(c)}`;
   $("qPrompt").innerHTML = zh
     ? `<span class="big${[...c.h].length > 3 ? " long" : ""}" lang="zh-Hant">${c.h}</span>`
-    : `<span class="prompt">${esc(c.e)}</span>`;
+    : `<span class="prompt">${esc(kurz(c))}</span>`;
   $("qReveal").innerHTML = "";
-  $("qNext").hidden = true;
+  $("qNext").hidden = true; $("qNew").hidden = false;
+  $("optLabel").textContent = zh ? "Bedeutung" : "Zeichen";
+  $("optsP").innerHTML = pinyinOptions(c).map(p => `<button class="opt pin" data-p="${esc(p)}">${esc(p)}</button>`).join("");
   const opts = shuffle([c, ...distractors(c)]);
   $("opts").innerHTML = opts.map(o => zh
     ? `<button class="opt" data-id="${o.id}">${esc(kurz(o))}</button>`
     : `<button class="opt zh" data-id="${o.id}" lang="zh-Hant">${o.h}</button>`).join("");
-  $("opts").querySelectorAll(".opt").forEach(b => b.onclick = () => answer(b));
+  $("optsP").querySelectorAll(".opt").forEach(b => b.onclick = () => choose("p", b));
+  $("opts").querySelectorAll(".opt").forEach(b => b.onclick = () => choose("m", b));
 }
-function answer(b){
+function choose(row, b){
   if (qResult !== null) return;
-  const c = cur, ok = b.dataset.id === c.id; qResult = ok;
+  qPick[row] = b;
+  $(row === "p" ? "optsP" : "opts").querySelectorAll(".opt").forEach(x => x.classList.toggle("picked", x === b));
+  if (qPick.p && qPick.m) reveal();
+}
+function reveal(){
+  const c = cur, okP = qPick.p.dataset.p === c.p, okM = qPick.m.dataset.id === c.id, ok = okP && okM;
+  qResult = ok; $("qNew").hidden = true;
+  $("optsP").querySelectorAll(".opt").forEach(x => {
+    x.disabled = true; x.classList.remove("picked");
+    if (x.dataset.p === c.p) x.classList.add("right"); else if (x === qPick.p) x.classList.add("wrong");
+  });
   $("opts").querySelectorAll(".opt").forEach(x => {
-    x.disabled = true;
-    const o = CARDS.find(k => k.id === x.dataset.id);
-    if (x.dataset.id === c.id) x.classList.add("right");
-    else if (x === b) x.classList.add("wrong");
-    if (st.dir === "de") x.insertAdjacentHTML("beforeend", `<small>${esc(o.p)}</small>`);
+    x.disabled = true; x.classList.remove("picked");
+    if (x.dataset.id === c.id) x.classList.add("right"); else if (x === qPick.m) x.classList.add("wrong");
+    if (st.dir === "de"){ const o = CARDS.find(k => k.id === x.dataset.id); x.insertAdjacentHTML("beforeend", `<small>${esc(kurz(o))}</small>`); }
   });
   $("qReveal").innerHTML = st.dir === "zh"
     ? `<span class="pinyin">${esc(c.p)}</span><span class="expl" style="display:block">${esc(c.e)}</span>`
-    : `<span class="mid" lang="zh-Hant">${c.h}</span> <span class="pinyin">${esc(c.p)}</span>`;
-  if (ok) setTimeout(() => { if (qResult === true && cur === c && !$("quiz").hidden) rate(true); }, 1100);
+    : `<span class="mid" lang="zh-Hant">${c.h}</span> <span class="pinyin">${esc(c.p)}</span><span class="expl" style="display:block">${esc(c.e)}</span>`;
+  if (ok) setTimeout(() => { if (qResult === true && cur === c && !$("quiz").hidden) rate(true); }, 1300);
   else $("qNext").hidden = false;
 }
 $("qNext").onclick = () => rate(false);
+$("qNew").onclick = () => { if (qResult === null) skipNew(); };
 document.addEventListener("keydown", e => {
   if ($("quiz").hidden) return;
   const n = +e.key;
-  if (n >= 1 && n <= 4 && qResult === null){ const b = $("opts").children[n - 1]; if (b) answer(b); }
+  if (n >= 1 && n <= 4 && qResult === null){
+    const row = qPick.p ? "m" : "p", b = $(row === "p" ? "optsP" : "opts").children[n - 1];
+    if (b) choose(row, b);
+  }
   else if ((e.key === "Enter" || e.key === " ") && qResult === false){ e.preventDefault(); rate(false); }
+});
+
+/* --- Vokabelliste mit Suche --- */
+const norm = s => plain(s).replace(/[\s'’-]/g, "");
+let listBuilt = false;
+function renderList(){
+  const q = $("q").value.trim(), qn = norm(q), ql = q.toLowerCase();
+  const hit = c => !q || c.h.includes(q) || (c.b || "").includes(q) || norm(c.p).includes(qn)
+    || c.e.toLowerCase().includes(ql) || kurz(c).toLowerCase().includes(ql);
+  const hl = s => { if (!q || !ql) return esc(s); const i = s.toLowerCase().indexOf(ql); return i < 0 ? esc(s) : esc(s.slice(0, i)) + `<mark class="hl">${esc(s.slice(i, i + ql.length))}</mark>` + esc(s.slice(i + ql.length)); };
+  let n = 0;
+  $("vlist").innerHTML = DATA.map(L => {
+    const rows = CARDS.filter(c => c.l === L.nr && hit(c));
+    n += rows.length;
+    if (!rows.length) return "";
+    return `<div class="vgroup"><h3>Lektion ${L.nr} · <span lang="zh-Hant">${L.zh}</span> ${L.de}</h3>` + rows.map(c =>
+      `<div class="vrow"><span class="h" lang="zh-Hant">${c.h}${c.b ? `<span class="v">(${c.b})</span>` : ""}</span>
+        <span class="p">${esc(c.p)}</span><span class="b">Box ${st.boxes[c.id] || 1}</span>
+        <span class="e">${hl(c.e)}</span></div>`).join("") + `</div>`;
+  }).join("");
+  $("qCount").textContent = q ? `${n} ${n === 1 ? "Treffer" : "Treffer"} für „${q}“` : `${n} Vokabeln`;
+}
+$("q").addEventListener("input", renderList);
+$("tabs").querySelectorAll("button").forEach(b => b.onclick = () => {
+  if (b.dataset.tab === "list"){ renderList(); show("list"); } else home();
 });
 
 /* --- Strichfolge-Übung: Striche in der richtigen Reihenfolge anklicken --- */
@@ -619,6 +731,7 @@ $("xApply").onclick = () => {
     st.boxes = o.boxes; st.sbox = o.sbox || {}; save(); renderSetup(); $("xIn").value = ""; $("xMsg").textContent = "Fortschritt übernommen."; }
   catch(e) { $("xMsg").textContent = "Der Code ist ungültig. Kopiere ihn vollständig vom anderen Gerät."; }
 };
+
 renderSetup();
 initSync();
 if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
