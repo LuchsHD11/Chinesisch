@@ -57,8 +57,52 @@ button:focus-visible{outline:2px solid var(--jade);outline-offset:2px}
 .bar i{display:block;height:100%;background:var(--jade)}
 .seg{display:flex;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:3px;gap:3px}
 .seg button{flex:1;border:0;background:none;padding:9px 6px;border-radius:7px;font-size:15px;color:var(--muted)}
+#mode{display:grid;grid-template-columns:repeat(6,1fr)}
+#mode button{grid-column:span 2}
+#mode button[data-soon]{grid-column:span 3;color:var(--muted);opacity:.75}
+#mode button[data-soon]::after{content:"bald";font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;margin-left:6px;padding:1px 5px;border-radius:4px;border:1px solid var(--line);vertical-align:2px}
 .seg button[aria-pressed="true"]{background:var(--jade-soft);color:var(--ink);font-weight:600}
 .boxes{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;align-items:end}
+.goal{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px;display:grid;grid-template-columns:64px 1fr;gap:14px;align-items:center}
+.ring{width:64px;height:64px}
+.ring circle{fill:none;stroke-width:7}
+.ring .bg{stroke:var(--line)}
+.ring .fg{stroke:var(--jade);stroke-linecap:round;transition:stroke-dashoffset .4s}
+.ring text{fill:var(--ink);font:600 15px var(--sans);text-anchor:middle;dominant-baseline:central}
+.goal .t{display:flex;flex-direction:column;gap:2px;min-width:0}
+.goal b{font-size:17px}
+.goal span{font-size:13px;color:var(--muted)}
+.kpis{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;gap:2px}
+.kpi b{font-size:26px;font-variant-numeric:tabular-nums;line-height:1.1}
+.kpi span{font-size:13px;color:var(--muted)}
+.chart{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 12px 8px}
+.chart svg{width:100%;height:auto;display:block}
+.chart .grid{stroke:var(--line);stroke-width:1}
+.chart .ax{fill:var(--muted);font:11px var(--sans);font-variant-numeric:tabular-nums}
+.chart .dbar{fill:var(--jade);opacity:.35}
+.chart .dbar.met{opacity:1}
+.chart .goalline{stroke:var(--again);stroke-width:1.5;stroke-dasharray:4 4}
+.chart .area{fill:var(--jade);opacity:.12}
+.chart .line{fill:none;stroke:var(--jade);stroke-width:2.5;stroke-linejoin:round}
+.chart .dot{fill:var(--jade)}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--muted);padding:6px 4px 0}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;background:var(--jade);margin-right:5px;vertical-align:-1px}
+.legend i.l{height:2px;background:var(--again);vertical-align:3px}
+.lstat{display:grid;grid-template-columns:34px 1fr 76px;gap:10px;align-items:center;padding:7px 0;border-top:1px solid var(--line);font-size:14px}
+.lstat:first-child{border-top:0}
+.lstat .n{font-weight:600}
+.lstat .stack{display:flex;height:10px;border-radius:5px;overflow:hidden;background:var(--line)}
+.lstat .stack i{display:block;height:100%;background:var(--jade)}
+.lstat .v{text-align:right;color:var(--muted);font-variant-numeric:tabular-nums}
+.boxes button{background:none;border:1px solid transparent;border-radius:8px;padding:4px 2px;font:inherit}
+.boxes button[aria-expanded="true"]{border-color:var(--jade);background:var(--jade-soft)}
+.boxes button:disabled{cursor:default}
+.boxlist{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:6px 12px;max-height:320px;overflow-y:auto}
+.boxlist .vrow{grid-template-columns:minmax(52px,auto) 1fr}
+.boxlist .vrow:first-child{border-top:0}
+.boxlist .vrow .h{font-size:20px}
+.boxlist .vrow .e{grid-column:2}
 .boxes div{display:flex;flex-direction:column;align-items:center;gap:4px;font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
 .boxes span.col{width:100%;border-radius:4px 4px 0 0;background:var(--jade);min-height:3px}
 .boxes b{font-weight:600;color:var(--ink)}
@@ -75,7 +119,8 @@ button:focus-visible{outline:2px solid var(--jade);outline-offset:2px}
 .stage{perspective:1400px}
 .card{position:relative;min-height:340px;transition:transform .45s cubic-bezier(.3,.7,.3,1);transform-style:preserve-3d;cursor:pointer}
 .card.flipped{transform:rotateY(180deg)}
-.card,button,.vrow{-webkit-tap-highlight-color:transparent}
+html,body,*{-webkit-tap-highlight-color:transparent}
+#sv,#sv *,.writer,.writer *,.qcard{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;outline:none}
 .card{-webkit-user-select:none;user-select:none;outline:none}
 .card:focus-visible .face{outline:2px solid var(--jade);outline-offset:2px}
 .face{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;background:var(--card);
@@ -183,13 +228,17 @@ mark.hl{background:var(--jade-soft);color:inherit;border-radius:3px}
   <nav class="tabs" id="tabs" role="tablist">
     <button role="tab" data-tab="setup" aria-selected="true">Üben</button>
     <button role="tab" data-tab="list" aria-selected="false">Vokabelliste</button>
+    <button role="tab" data-tab="stats" aria-selected="false">Statistik</button>
   </nav>
   <section id="setup" class="sec" style="gap:22px">
+    <div class="goal" id="goalCard"></div>
 
     <div class="sec"><h2>Modus</h2>
       <div class="seg" id="mode">
-        <button data-v="cards">Karteikarten</button><button data-v="quiz">Quiz</button><button data-v="stroke">Strichfolge</button></div>
-      <p class="note" id="modeNote"></p></div>
+        <button data-v="cards">Karteikarten</button><button data-v="quiz">Quiz</button><button data-v="stroke">Strichfolge</button>
+        <button data-soon="listen">Hörverständnis</button><button data-soon="write">Sätze schreiben</button></div>
+      <p class="note" id="modeNote"></p>
+</div>
 
     <div class="sec">
       <div class="row"><h2>Lektionen</h2>
@@ -204,11 +253,37 @@ mark.hl{background:var(--jade-soft);color:inherit;border-radius:3px}
 
     <div class="sec"><h2 id="boxTitle">Leitner-Boxen der Auswahl</h2>
       <div class="boxes" id="boxes"></div>
+      <div class="boxlist" id="boxlist" hidden></div>
       <p class="note" id="boxNote"></p>
       <p class="note">Geübt wird ohne Ende, bis du aufhörst. Box 1 kommt etwa doppelt so oft dran wie Box 2, Box 2 doppelt so oft wie Box 3 und so weiter.</p></div>
 
     <button class="primary" id="start">Lernen starten</button>
 
+  </section>
+
+  <section id="soon" hidden>
+    <div class="done">
+      <div class="mid" id="soonIcon">聽</div>
+      <h2 id="soonTitle" style="font-size:20px;text-transform:none;letter-spacing:0;color:var(--ink)"></h2>
+      <p style="margin:0" id="soonText"></p>
+      <p class="note" style="margin:0">Wird in einem kommenden Update hinzugefügt.</p>
+      <button class="primary" id="soonBack">Zurück zur Auswahl</button>
+    </div>
+  </section>
+
+  <section id="stats" class="sec" hidden style="gap:22px">
+    <div class="kpis" id="kpis"></div>
+    <div class="sec"><h2>Tagesziel</h2>
+      <div class="seg" id="goalSel"><button data-v="10">10</button><button data-v="20">20</button><button data-v="30">30</button><button data-v="50">50</button><button data-v="100">100</button></div>
+      <p class="note">Antworten pro Tag. Zählt in allen Modi, „Unbekannt“ zählt nicht mit.</p></div>
+    <div class="sec"><h2>Antworten der letzten 14 Tage</h2>
+      <div class="chart" id="chartDays"></div></div>
+    <div class="sec"><h2>Sichere Wörter im Verlauf</h2>
+      <div class="chart" id="chartSafe"></div></div>
+    <div class="sec"><h2>Fortschritt pro Lektion</h2>
+      <div class="chart" id="lessonStats"></div>
+      <p class="note">Anteil der Wörter in Box 4 und 5.</p></div>
+    <div class="sec" id="dataSec"><h2>Daten</h2>
     <p class="note" id="sync"></p>
     <details class="xfer"><summary>Fortschritt übertragen</summary>
       <p class="note">Kopiere den Code hier und füge ihn auf dem anderen Gerät unten ein.</p>
@@ -220,7 +295,8 @@ mark.hl{background:var(--jade-soft);color:inherit;border-radius:3px}
     </details>
     <div class="row" style="justify-content:flex-start">
       <button class="danger" id="reset">Fortschritt zurücksetzen</button>
-      <div class="confirm" id="confirm" hidden>Wirklich alles auf Box 1? <button class="yes" id="yes">Zurücksetzen</button><button class="link" id="no">Abbrechen</button></div>
+      <div class="confirm" id="confirm" hidden>Wirklich alle Boxen und die Statistik zurücksetzen? <button class="yes" id="yes">Zurücksetzen</button><button class="link" id="no">Abbrechen</button></div>
+    </div>
     </div>
   </section>
 
@@ -293,7 +369,7 @@ const $ = id => document.getElementById(id);
 const esc = s => String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;");
 const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
 
-let st = {boxes:{}, sbox:{}, sel:[1,2,3,4,5,6,7,8], dir:"zh", lim:"20", mode:"cards"};
+let st = {boxes:{}, sbox:{}, sel:[1,2,3,4,5,6,7,8], dir:"zh", lim:"20", mode:"cards", goal:"30", days:{}};
 try { const s = JSON.parse(localStorage.getItem(KEY)); if (s) st = Object.assign(st, s); } catch(e) {}
 st.sbox = st.sbox || {};
 const persistLocal = () => { try { localStorage.setItem(KEY, JSON.stringify(st)); } catch(e) {} };
@@ -367,7 +443,18 @@ const NOTES = {
   stroke:"Ein Zeichen erscheint, du klickst seine Striche in der richtigen Reihenfolge an."
 };
 
+let openBox = 0;
+const SOON = {
+  listen: ["聽", "Hörverständnis", "Ein Wort oder Satz wird vorgelesen, und du wählst Zeichen oder Bedeutung aus."],
+  write: ["寫", "Sätze schreiben", "Ein deutscher Satz wird angezeigt, und du schreibst ihn mit der chinesischen Tastatur auf Chinesisch."]
+};
+document.querySelectorAll("#mode [data-soon]").forEach(b => b.onclick = () => {
+  const [icon, title, text] = SOON[b.dataset.soon];
+  $("soonIcon").textContent = icon; $("soonTitle").textContent = title; $("soonText").textContent = text;
+  show("soon");
+});
 function renderSetup(){
+  renderGoal();
   const strokeMode = isStroke();
   $("lessons").innerHTML = DATA.map(L => {
     const cs = CARDS.filter(c => c.l === L.nr);
@@ -380,7 +467,7 @@ function renderSetup(){
   document.querySelectorAll(".lesson").forEach(b => b.onclick = () => {
     const n = +b.dataset.l; st.sel = st.sel.includes(n) ? st.sel.filter(x => x !== n) : [...st.sel, n]; save(); renderSetup();
   });
-  ["mode","dir"].forEach(k => $(k).querySelectorAll("button").forEach(b => {
+  ["mode","dir"].forEach(k => $(k).querySelectorAll("button:not([data-soon])").forEach(b => {
     b.setAttribute("aria-pressed", b.dataset.v === st[k]);
     b.onclick = () => { st[k] = b.dataset.v; save(); renderSetup(); };
   }));
@@ -391,7 +478,14 @@ function renderSetup(){
     : "Richtig schiebt ein Wort eine Box weiter, falsch setzt es auf Box 1. Karteikarten und Quiz teilen sich die Boxen. Ab Box 4 gilt ein Wort als sicher.";
   const pool = strokeMode ? strokeItems(selected()) : selected();
   const counts = [1,2,3,4,5].map(n => pool.filter(i => boxOf(i) === n).length), max = Math.max(1, ...counts);
-  $("boxes").innerHTML = counts.map((n,i) => `<div><b>${n}</b><span class="col" style="height:${4 + 56*n/max}px;opacity:${.35 + i*.16}"></span>Box ${i+1}</div>`).join("");
+  if (openBox && !counts[openBox - 1]) openBox = 0;
+  $("boxes").innerHTML = counts.map((n,i) => `<button aria-expanded="${openBox === i + 1}" ${n ? "" : "disabled"} data-b="${i + 1}" aria-label="Box ${i + 1}: ${n} anzeigen"><div><b>${n}</b><span class="col" style="height:${4 + 56*n/max}px;opacity:${.35 + i*.16}"></span>Box ${i+1}</div></button>`).join("");
+  $("boxes").querySelectorAll("button").forEach(b => b.onclick = () => { openBox = openBox === +b.dataset.b ? 0 : +b.dataset.b; renderSetup(); });
+  const inBox = openBox ? pool.filter(i => boxOf(i) === openBox) : [];
+  $("boxlist").hidden = !openBox;
+  $("boxlist").innerHTML = inBox.map(i => strokeMode
+    ? `<div class="vrow"><span class="h" lang="zh-Hant">${i.ch}</span><span class="p">${esc(i.word.p)}</span><span class="e">aus ${i.word.h} · ${esc(kurz(i.word))}</span></div>`
+    : `<div class="vrow"><span class="h" lang="zh-Hant">${i.h}</span><span class="p">${esc(i.p)}</span><span class="e">L${i.l} · ${esc(kurz(i))}</span></div>`).join("");
   const n = pool.length;
   $("start").disabled = !n;
   $("start").textContent = n ? `Üben starten · ${n} ${strokeMode ? "Zeichen" : "Karten"}` : "Wähle mindestens eine Lektion";
@@ -400,15 +494,15 @@ $("all").onclick = () => { st.sel = [1,2,3,4,5,6,7,8]; save(); renderSetup(); };
 $("none").onclick = () => { st.sel = []; save(); renderSetup(); };
 $("reset").onclick = () => { $("confirm").hidden = false; $("reset").hidden = true; };
 $("no").onclick = () => { $("confirm").hidden = true; $("reset").hidden = false; };
-$("yes").onclick = () => { st.boxes = {}; st.sbox = {}; save(); $("no").onclick(); renderSetup(); };
+$("yes").onclick = () => { st.boxes = {}; st.sbox = {}; st.days = {}; save(); $("no").onclick(); renderSetup(); if (!$("stats").hidden) renderStats(); };
 
 /* --- Endlos-Übung (gemeinsam für alle Modi) --- */
 const WEIGHT = [0, 16, 8, 4, 2, 1];
 let skipped = 0, pool = [], roundMode = "cards", cur = null, tick = 0, recent = [], retry = [], right = 0, wrong = 0, missed = new Set();
 function show(id){
-  ["setup","list","study","quiz","stroke","done"].forEach(s => $(s).hidden = s !== id);
+  ["setup","list","stats","soon","study","quiz","stroke","done"].forEach(s => $(s).hidden = s !== id);
   $("topbar").hidden = !["study","quiz","stroke"].includes(id);
-  $("tabs").hidden = $("head").hidden = !["setup","list"].includes(id);
+  $("tabs").hidden = $("head").hidden = !["setup","list","stats"].includes(id);
   $("tabs").querySelectorAll("button").forEach(b => b.setAttribute("aria-selected", b.dataset.tab === id));
   window.scrollTo(0,0);
 }
@@ -428,7 +522,43 @@ function pick(){
   for (const i of cand){ r -= WEIGHT[boxOf(i)]; if (r <= 0) return i; }
   return cand[cand.length - 1];
 }
+/* --- Tagesziel und Statistik --- */
+const dkey = (d = new Date()) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+const addDays = (d, n) => { const x = new Date(d); x.setDate(x.getDate() + n); return x; };
+const safeCount = () => CARDS.filter(c => (st.boxes[c.id] || 1) >= 4).length;
+function track(ok){
+  st.days = st.days || {};
+  const k = dkey(), d = st.days[k] || (st.days[k] = {n:0, r:0});
+  d.n++; if (ok) d.r++;
+  d.s = safeCount();
+}
+function streak(){
+  const g = +st.goal, days = st.days || {};
+  let n = 0, d = new Date();
+  if (!((days[dkey(d)] || {}).n >= g)) d = addDays(d, -1);
+  while ((days[dkey(d)] || {}).n >= g){ n++; d = addDays(d, -1); }
+  return n;
+}
+function bestStreak(){
+  const g = +st.goal, keys = Object.keys(st.days || {}).filter(k => st.days[k].n >= g).sort();
+  let best = 0, run = 0, prev = null;
+  for (const k of keys){
+    const d = new Date(k + "T12:00:00");
+    run = prev && dkey(addDays(prev, 1)) === k ? run + 1 : 1; best = Math.max(best, run); prev = d;
+  }
+  return best;
+}
+function renderGoal(){
+  const g = +st.goal, n = ((st.days || {})[dkey()] || {}).n || 0, p = Math.min(1, n / g), s = streak();
+  const C = 2 * Math.PI * 27;
+  $("goalCard").innerHTML = `<svg class="ring" viewBox="0 0 64 64" aria-hidden="true"><circle class="bg" cx="32" cy="32" r="27"/>
+    <circle class="fg" cx="32" cy="32" r="27" transform="rotate(-90 32 32)" stroke-dasharray="${C}" stroke-dashoffset="${C * (1 - p)}"/>
+    <text x="32" y="33">${Math.round(p * 100)}%</text></svg>
+    <div class="t"><b>${n >= g ? "Tagesziel geschafft!" : `Heute ${n} von ${g}`}</b>
+    <span>${s ? `${s} ${s === 1 ? "Tag" : "Tage"} in Folge` : "Noch keine Serie, schaff heute dein Ziel"} · Ziel ändern unter Statistik</span></div>`;
+}
 function rate(ok){
+  track(ok);
   const it = cur;
   if (ok){ right++; setBox(it, Math.min(5, boxOf(it) + 1)); }
   else {
@@ -462,6 +592,7 @@ function pause(){
 function home(){ renderSetup(); show("setup"); }
 $("back").onclick = pause;
 $("home").onclick = home;
+$("soonBack").onclick = home;
 $("resume").onclick = () => { st.mode = roundMode; startPractice(pool, false); };
 $("redo").onclick = () => { st.mode = roundMode; startPractice(pool.filter(i => missed.has(i.id)), false); };
 $("back").textContent = "← Pause";
@@ -616,8 +747,69 @@ $("q").addEventListener("input", renderList);
 /* Enter bzw. Lupe auf der Handytastatur: Tastatur schließen */
 $("q").addEventListener("keydown", e => { if (e.key === "Enter"){ e.preventDefault(); $("q").blur(); } });
 $("tabs").querySelectorAll("button").forEach(b => b.onclick = () => {
-  if (b.dataset.tab === "list"){ renderList(); show("list"); } else home();
+  if (b.dataset.tab === "list"){ renderList(); show("list"); }
+  else if (b.dataset.tab === "stats"){ renderStats(); show("stats"); }
+  else home();
 });
+function renderStats(){
+  const days = st.days || {}, today = days[dkey()] || {n:0, r:0}, g = +st.goal;
+  const all = Object.values(days), total = all.reduce((s, d) => s + d.n, 0), totalR = all.reduce((s, d) => s + d.r, 0);
+  const safe = safeCount();
+  $("kpis").innerHTML = [
+    [today.n, `Antworten heute (Ziel ${g})`],
+    [today.n ? Math.round(100 * today.r / today.n) + "%" : "–", "richtig heute"],
+    [streak(), `Tage in Folge (Rekord ${bestStreak()})`],
+    [`${safe}/${CARDS.length}`, "Wörter sicher (Box 4–5)"],
+    [total, "Antworten insgesamt"],
+    [total ? Math.round(100 * totalR / total) + "%" : "–", "richtig insgesamt"]
+  ].map(([v, l]) => `<div class="kpi"><b>${v}</b><span>${l}</span></div>`).join("");
+  $("goalSel").querySelectorAll("button").forEach(b => {
+    b.setAttribute("aria-pressed", b.dataset.v === st.goal);
+    b.onclick = () => { st.goal = b.dataset.v; save(); renderStats(); };
+  });
+
+  /* Balken: Antworten pro Tag */
+  const W = 340, H = 150, L = 30, B = 22, T = 8, list = [];
+  for (let i = 13; i >= 0; i--){ const d = addDays(new Date(), -i); list.push({d, v:(days[dkey(d)] || {}).n || 0}); }
+  const max = Math.max(g, ...list.map(x => x.v)), step = max <= 20 ? 5 : max <= 60 ? 20 : max <= 150 ? 50 : 100, top = Math.ceil(max / step) * step;
+  const y = v => T + (H - T - B) * (1 - v / top), bw = (W - L) / 14;
+  let svg = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Antworten pro Tag, letzte 14 Tage">`;
+  for (let v = 0; v <= top; v += step) svg += `<line class="grid" x1="${L}" x2="${W}" y1="${y(v)}" y2="${y(v)}"/><text class="ax" x="${L - 6}" y="${y(v) + 4}" text-anchor="end">${v}</text>`;
+  list.forEach((x, i) => {
+    const h = y(0) - y(x.v), cx = L + i * bw + bw / 2;
+    if (x.v) svg += `<rect class="dbar${x.v >= g ? " met" : ""}" x="${L + i * bw + 3}" y="${y(x.v)}" width="${bw - 6}" height="${h}" rx="2"><title>${x.d.getDate()}.${x.d.getMonth() + 1}.: ${x.v}</title></rect>`;
+    if ((i % 2 === 1 && i < 12) || i === 13) svg += i === 13 ? `<text class="ax" x="${W}" y="${H - 6}" text-anchor="end">heute</text>` : `<text class="ax" x="${cx}" y="${H - 6}" text-anchor="middle">${x.d.getDate()}.</text>`;
+  });
+  svg += `<line class="goalline" x1="${L}" x2="${W}" y1="${y(g)}" y2="${y(g)}"/></svg>`;
+  $("chartDays").innerHTML = svg + `<div class="legend"><span><i></i>Ziel erreicht</span><span><i style="opacity:.35"></i>darunter</span><span><i class="l"></i>Tagesziel</span></div>`;
+
+  /* Linie: sichere Wörter über die Zeit */
+  const keys = Object.keys(days).filter(k => days[k].s != null).sort();
+  if (!keys.includes(dkey())) keys.push(dkey());
+  const pts = keys.map(k => ({k, v: k === dkey() ? safe : days[k].s}));
+  if (pts.length < 2){
+    $("chartSafe").innerHTML = `<p class="note" style="padding:4px">Der Verlauf erscheint, sobald du an mindestens zwei Tagen geübt hast. Heute: ${safe} sichere Wörter.</p>`;
+  } else {
+    const t0 = new Date(pts[0].k + "T12:00:00"), t1 = new Date(pts[pts.length - 1].k + "T12:00:00"), span = Math.max(1, (t1 - t0) / 864e5);
+    const smax = Math.max(10, ...pts.map(p => p.v)), sstep = smax <= 50 ? 10 : smax <= 200 ? 50 : 100, stop = Math.ceil(smax / sstep) * sstep;
+    const xs = p => L + 6 + (W - L - 12) * ((new Date(p.k + "T12:00:00") - t0) / 864e5) / span, ys = v => T + (H - T - B) * (1 - v / stop);
+    let s = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Sichere Wörter im Verlauf">`;
+    for (let v = 0; v <= stop; v += sstep) s += `<line class="grid" x1="${L}" x2="${W}" y1="${ys(v)}" y2="${ys(v)}"/><text class="ax" x="${L - 6}" y="${ys(v) + 4}" text-anchor="end">${v}</text>`;
+    const line = pts.map(p => `${xs(p).toFixed(1)},${ys(p.v).toFixed(1)}`).join(" ");
+    s += `<polygon class="area" points="${xs(pts[0]).toFixed(1)},${ys(0)} ${line} ${xs(pts[pts.length - 1]).toFixed(1)},${ys(0)}"/><polyline class="line" points="${line}"/>`;
+    const last = pts[pts.length - 1];
+    s += `<circle class="dot" cx="${xs(last)}" cy="${ys(last.v)}" r="4"/>`;
+    const lab = k => { const d = new Date(k + "T12:00:00"); return `${d.getDate()}.${d.getMonth() + 1}.`; };
+    s += `<text class="ax" x="${xs(pts[0])}" y="${H - 6}" text-anchor="start">${lab(pts[0].k)}</text><text class="ax" x="${W}" y="${H - 6}" text-anchor="end">heute · ${last.v}</text></svg>`;
+    $("chartSafe").innerHTML = s;
+  }
+
+  /* Pro Lektion */
+  $("lessonStats").innerHTML = DATA.map(Ls => {
+    const cs = CARDS.filter(c => c.l === Ls.nr), n = cs.filter(c => (st.boxes[c.id] || 1) >= 4).length;
+    return `<div class="lstat"><span class="n">L${Ls.nr}</span><span class="stack"><i style="width:${100 * n / cs.length}%"></i></span><span class="v">${n}/${cs.length}</span></div>`;
+  }).join("");
+}
 
 /* --- Strichfolge-Übung: Striche in der richtigen Reihenfolge anklicken --- */
 const NS = "http://www.w3.org/2000/svg";
@@ -664,6 +856,7 @@ function complete(){
   status(sMistakes ? `Fertig, mit ${sMistakes} ${sMistakes === 1 ? "Fehler" : "Fehlern"}. Das Zeichen kommt bald nochmal.` : "Fehlerfrei! Alle Striche in der richtigen Reihenfolge.");
 }
 $("sv").addEventListener("pointerdown", e => {
+  e.preventDefault();
   if (sDone || $("stroke").hidden) return;
   const sv = $("sv"), pt = sv.createSVGPoint(); pt.x = e.clientX; pt.y = e.clientY;
   const p = pt.matrixTransform(sv.getScreenCTM().inverse()), x = p.x, y = 900 - p.y;
@@ -797,15 +990,15 @@ $("vlist").addEventListener("keydown", e => { const r = e.target.closest(".vrow"
 
 const enc = o => btoa(unescape(encodeURIComponent(JSON.stringify(o))));
 const dec = s => JSON.parse(decodeURIComponent(escape(atob(s.trim()))));
-document.querySelector(".xfer").addEventListener("toggle", () => { $("xOut").value = enc({boxes:st.boxes, sbox:st.sbox}); });
+document.querySelector(".xfer").addEventListener("toggle", () => { $("xOut").value = enc({boxes:st.boxes, sbox:st.sbox, days:st.days, goal:st.goal}); });
 $("xCopy").onclick = async () => {
-  $("xOut").value = enc({boxes:st.boxes, sbox:st.sbox});
+  $("xOut").value = enc({boxes:st.boxes, sbox:st.sbox, days:st.days, goal:st.goal});
   try { await navigator.clipboard.writeText($("xOut").value); $("xMsg").textContent = "Kopiert."; }
   catch(e) { $("xOut").select(); $("xMsg").textContent = "Markiert, jetzt mit Strg+C oder „Kopieren“ übernehmen."; }
 };
 $("xApply").onclick = () => {
   try { const o = dec($("xIn").value); if (!o.boxes) throw 0;
-    st.boxes = o.boxes; st.sbox = o.sbox || {}; save(); renderSetup(); $("xIn").value = ""; $("xMsg").textContent = "Fortschritt übernommen."; }
+    st.boxes = o.boxes; st.sbox = o.sbox || {}; if (o.days) st.days = o.days; if (o.goal) st.goal = o.goal; save(); renderSetup(); $("xIn").value = ""; $("xMsg").textContent = "Fortschritt übernommen."; }
   catch(e) { $("xMsg").textContent = "Der Code ist ungültig. Kopiere ihn vollständig vom anderen Gerät."; }
 };
 
