@@ -75,6 +75,9 @@ button:focus-visible{outline:2px solid var(--jade);outline-offset:2px}
 .stage{perspective:1400px}
 .card{position:relative;min-height:340px;transition:transform .45s cubic-bezier(.3,.7,.3,1);transform-style:preserve-3d;cursor:pointer}
 .card.flipped{transform:rotateY(180deg)}
+.card,button,.vrow{-webkit-tap-highlight-color:transparent}
+.card{-webkit-user-select:none;user-select:none;outline:none}
+.card:focus-visible .face{outline:2px solid var(--jade);outline-offset:2px}
 .face{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;background:var(--card);
   border:1px solid var(--line);border-radius:16px;padding:20px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;text-align:center}
 .back{transform:rotateY(180deg)}
@@ -223,7 +226,7 @@ mark.hl{background:var(--jade-soft);color:inherit;border-radius:3px}
 
   <section id="list" class="sec" hidden>
     <div class="lhead">
-      <input class="search" id="q" type="search" placeholder="Suchen: Deutsch, Pinyin oder 字" autocomplete="off" aria-label="Vokabeln durchsuchen">
+      <input class="search" id="q" type="search" placeholder="Suchen: Deutsch, Pinyin oder 字" autocomplete="off" enterkeyhint="search" aria-label="Vokabeln durchsuchen">
       <div class="jump" id="jump" aria-label="Zu Lektion springen"></div>
     </div>
     <p class="note" id="qCount"></p>
@@ -468,7 +471,13 @@ let flipped = false;
 function showCard(){
   show("study");
   const c = cur; flipped = false;
-  $("card").classList.remove("flipped"); $("rate").hidden = true; $("strokes").hidden = true; $("cardEx").hidden = true;
+  /* Karte ohne Animation zurückdrehen, bevor das neue Wort eingesetzt wird */
+  const card = $("card");
+  if (card.classList.contains("flipped")){
+    card.style.transition = "none"; card.classList.remove("flipped");
+    void card.offsetWidth; card.style.transition = "";
+  }
+  $("rate").hidden = true; $("strokes").hidden = true; $("cardEx").hidden = true;
   const long = [...c.h].length > 3 ? " long" : "";
   const tag = `<span class="tag">L${c.l} · ${c.nr}</span><span class="boxtag">Box ${boxOf(c)}</span>`;
   const variant = c.b ? `<span class="variant"><em>im Buch</em>${c.b}</span>` : "";
@@ -604,6 +613,8 @@ function renderList(){
   $("qCount").textContent = q ? `${n} ${n === 1 ? "Treffer" : "Treffer"} für „${q}“` : `${n} Vokabeln`;
 }
 $("q").addEventListener("input", renderList);
+/* Enter bzw. Lupe auf der Handytastatur: Tastatur schließen */
+$("q").addEventListener("keydown", e => { if (e.key === "Enter"){ e.preventDefault(); $("q").blur(); } });
 $("tabs").querySelectorAll("button").forEach(b => b.onclick = () => {
   if (b.dataset.tab === "list"){ renderList(); show("list"); } else home();
 });
